@@ -122,7 +122,11 @@ class Event(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True)
     date_event = models.DateTimeField()
     duration = models.FloatField()
-    img = models.CharField(max_length=255, blank=True, null=True)
+    img = models.CharField(max_length=255)
+    place = models.CharField(max_length=100, blank=True, null=True)
+    latitude = models.CharField(max_length=100)
+    longitude = models.CharField(max_length=100)
+    address = models.CharField(max_length=100)
 
     class Meta:
         managed = False
