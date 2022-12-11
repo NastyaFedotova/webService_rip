@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'webServiceApplication.apps.WebserviceapplicationConfig',
     'rest_framework',
-    'rest_framework_swagger'
+    'rest_framework_swagger',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

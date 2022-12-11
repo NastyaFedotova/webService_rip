@@ -12,4 +12,12 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
 
-        fields = ['id_event', 'name', 'price', 'description', 'date_event', 'duration', 'img', 'place', 'latitude', 'longitude', 'address']
+        fields = ['id_event', 'name', 'price', 'description', 'date_event', 'duration', 'img',
+                  'place', 'latitude', 'longitude', 'address']
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+
+        fields = ['id_user', 'first_name', 'last_name', 'phone', 'email', 'personal_sale', 'login',
+                  'user_status', 'date_registration']

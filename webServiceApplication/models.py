@@ -1,3 +1,10 @@
+# This is an auto-generated Django model module.
+# You'll have to do the following manually to clean this up:
+#   * Rearrange models' order
+#   * Make sure each model has one field with primary_key=True
+#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
+#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+# Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
 
@@ -138,8 +145,8 @@ class Ticket(models.Model):
     id_event = models.ForeignKey(Event, models.DO_NOTHING, db_column='id_event')
     id_user = models.ForeignKey('User', models.DO_NOTHING, db_column='id_user')
     amount = models.IntegerField()
-    date_of_buying = models.DateTimeField()
-    booking_date = models.DateTimeField()
+    date_of_buying = models.DateTimeField(blank=True, null=True)
+    booking_date = models.DateTimeField(blank=True, null=True)
     ticket_status = models.CharField(max_length=6)
 
     class Meta:
@@ -150,7 +157,7 @@ class Ticket(models.Model):
 class User(models.Model):
     id_user = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=30)
-    second_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
     phone = models.CharField(unique=True, max_length=12)
     email = models.CharField(max_length=30, db_collation='utf32_general_ci')
     personal_sale = models.IntegerField(blank=True, null=True)
