@@ -31,6 +31,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Event.objects.all()
+        event_id = self.request.query_params.get('event_ids')
         name = self.request.query_params.get('name')
         price_min = self.request.query_params.get('price_min')
         price_max = self.request.query_params.get('price_max')
@@ -40,6 +41,8 @@ class EventViewSet(viewsets.ModelViewSet):
         duration_min = self.request.query_params.get('duration_min')
         duration_max = self.request.query_params.get('duration_max')
 
+        if event_id:
+            queryset = queryset.filter(id_event__in=event_id.split(','))
         if name:
             queryset = queryset.filter(name__contains=name)
         if price_min:

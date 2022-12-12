@@ -144,7 +144,7 @@ class Ticket(models.Model):
     id_ticket = models.AutoField(primary_key=True)
     id_event = models.ForeignKey(Event, models.DO_NOTHING, db_column='id_event')
     id_user = models.ForeignKey('User', models.DO_NOTHING, db_column='id_user')
-    amount = models.IntegerField()
+    count = models.IntegerField()
     date_of_buying = models.DateTimeField(blank=True, null=True)
     booking_date = models.DateTimeField(blank=True, null=True)
     ticket_status = models.CharField(max_length=6)
