@@ -1,0 +1,26 @@
+import redis
+from django.conf import settings
+from rest_framework import permissions
+
+from webServiceApplication.models import User
+
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+
+class IsStaff(permissions.BasePermission):
+    def has_permission(self, request, view):
+        session_id = request.COOKIES.get('session_id')
+        if session_id is None:
+            return False
+        user_id = session_storage.get(session_id)
+        user = User.objects.get(id=user_id)
+        return bool(user and (user.is_staff or user.is_superuser))
+
+
+class IsSuperUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        session_id = request.COOKIES.get('session_id')
+        if session_id is None:
+            return False
+        user_id = session_storage.get(session_id)
+        user = User.objects.get(id=user_id)
+        return bool(user and user.is_superuser)

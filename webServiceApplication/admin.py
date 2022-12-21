@@ -1,7 +1,16 @@
 from django.contrib import admin
-# Register your models here.
+
 from .models import Event, Ticket, User
 
-admin.site.register(Event)
-admin.site.register(Ticket)
-admin.site.register(User)
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'id', 'price')
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'id', 'email', 'is_superuser', 'is_staff')
+
+@admin.register(Ticket)
+class TicketAdmin(admin.ModelAdmin):
+    list_display = ('id', 'status')

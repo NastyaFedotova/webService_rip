@@ -8,7 +8,6 @@ from drf_yasg import openapi
 router = routers.DefaultRouter()
 router.register(r'tickets', views.TicketViewSet, basename='tickets')
 router.register(r'events', views.EventViewSet, basename='events')
-router.register(r'users', views.UserViewSet, basename='users')
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -28,5 +27,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path(r'events-price-range/', views.priceRange)
+    path('registration/', views.RegistrationAPIView.as_view()),
+    path('login/', views.LoginAPIView.as_view()),
+    path('logout/', views.LogoutAPIView.as_view()),
 ]

@@ -1,11 +1,10 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
+from django.conf import settings
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
+from django.utils import timezone
 from django.db import models
+
+from webServiceApplication.managers import UserManager
 
 
 class AuthGroup(models.Model):
@@ -17,7 +16,6 @@ class AuthGroup(models.Model):
 
 
 class AuthGroupPermissions(models.Model):
-    id = models.BigAutoField(primary_key=True)
     group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
     permission = models.ForeignKey('AuthPermission', models.DO_NOTHING)
 
@@ -56,7 +54,6 @@ class AuthUser(models.Model):
 
 
 class AuthUserGroups(models.Model):
-    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
 
@@ -67,7 +64,6 @@ class AuthUserGroups(models.Model):
 
 
 class AuthUserUserPermissions(models.Model):
-    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
 
@@ -84,7 +80,7 @@ class DjangoAdminLog(models.Model):
     action_flag = models.PositiveSmallIntegerField()
     change_message = models.TextField()
     content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    user_id = models.IntegerField()
 
     class Meta:
         managed = False
@@ -102,7 +98,6 @@ class DjangoContentType(models.Model):
 
 
 class DjangoMigrations(models.Model):
-    id = models.BigAutoField(primary_key=True)
     app = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     applied = models.DateTimeField()
@@ -123,49 +118,83 @@ class DjangoSession(models.Model):
 
 
 class Event(models.Model):
-    id_event = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    price = models.FloatField()
-    description = models.CharField(max_length=255, blank=True, null=True)
-    date_event = models.DateTimeField()
-    duration = models.FloatField()
-    img = models.CharField(max_length=255)
-    place = models.CharField(max_length=100, blank=True, null=True)
-    latitude = models.CharField(max_length=100)
-    longitude = models.CharField(max_length=100)
-    address = models.CharField(max_length=100)
+    title = models.CharField(max_length=45)
+    price = models.IntegerField()
+    description = models.TextField()
+    event_date = models.DateTimeField()
+    duration = models.IntegerField()
+    img = models.TextField()
+    place = models.CharField(max_length=45)
+    latitude = models.CharField(max_length=45)
+    longitude = models.CharField(max_length=45)
+    address = models.CharField(max_length=45)
+    remaining_tickets = models.IntegerField()
 
     class Meta:
         managed = False
         db_table = 'event'
 
+    def __str__(self):
+        return self.title
+
 
 class Ticket(models.Model):
-    id_ticket = models.AutoField(primary_key=True)
-    id_event = models.ForeignKey(Event, models.DO_NOTHING, db_column='id_event')
-    id_user = models.ForeignKey('User', models.DO_NOTHING, db_column='id_user')
+    STATUS = [
+        ('BOOKED', 'Booked'),
+        ('BOUGHT', 'Bought'),
+        ('CANCELLED', 'Cancelled'),
+        ('REFUND', 'Refund'),
+    ]
+    event = models.ForeignKey(Event, models.DO_NOTHING, db_column='event')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.DO_NOTHING, db_column='user')
     count = models.IntegerField()
-    date_of_buying = models.DateTimeField(blank=True, null=True)
+    buying_date = models.DateTimeField(blank=True, null=True)
     booking_date = models.DateTimeField(blank=True, null=True)
-    ticket_status = models.CharField(max_length=6)
+    status = models.CharField(max_length=9, choices=STATUS)
 
     class Meta:
         managed = False
         db_table = 'ticket'
 
 
-class User(models.Model):
-    id_user = models.AutoField(primary_key=True)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    phone = models.CharField(unique=True, max_length=12)
-    email = models.CharField(max_length=30, db_collation='utf32_general_ci')
+class User(AbstractBaseUser, PermissionsMixin):
+    password = models.CharField(max_length=128, null=True)
+    username = models.CharField(db_index=True, max_length=255, unique=True)
+    email = models.EmailField(db_index=True, unique=True)
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
     personal_sale = models.IntegerField(blank=True, null=True)
-    login = models.CharField(unique=True, max_length=30)
-    password = models.CharField(unique=True, max_length=30)
-    user_status = models.CharField(max_length=12)
-    date_registration = models.DateTimeField()
+    is_staff = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+
+    objects = UserManager()
 
     class Meta:
         managed = False
-        db_table = 'user'
+        db_table = 'webserviceapplication_user'
+
+    def __str__(self):
+        return self.username
+
+
+class WebserviceapplicationUserGroups(models.Model):
+    user_id = models.ForeignKey(User, models.DO_NOTHING)
+    group = models.ForeignKey(AuthGroup, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'webserviceapplication_user_groups'
+
+
+class WebserviceapplicationUserUserPermissions(models.Model):
+    user_id = models.ForeignKey(User, models.DO_NOTHING)
+    permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'webserviceapplication_user_user_permissions'
