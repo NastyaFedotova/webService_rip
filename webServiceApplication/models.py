@@ -6,6 +6,8 @@ from django.db import models
 
 from webServiceApplication.managers import UserManager
 
+from django.utils.translation import gettext_lazy as _
+
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
@@ -139,18 +141,18 @@ class Event(models.Model):
 
 
 class Ticket(models.Model):
-    STATUS = [
-        ('BOOKED', 'Booked'),
-        ('BOUGHT', 'Bought'),
-        ('CANCELLED', 'Cancelled'),
-        ('REFUND', 'Refund'),
-    ]
+    class ContractStatus(models.TextChoices):
+        BOOKED = 'BOOKED', _('Booked')
+        BOUGHT = 'BOUGHT', _('Bought')
+        CANCELLED = 'CANCELLED', _('Cancelled')
+        REFUND = 'REFUND', _('Refund')
+
     event = models.ForeignKey(Event, models.DO_NOTHING, db_column='event')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, models.DO_NOTHING, db_column='user')
     count = models.IntegerField()
     buying_date = models.DateTimeField(blank=True, null=True)
     booking_date = models.DateTimeField(blank=True, null=True)
-    status = models.CharField(max_length=9, choices=STATUS)
+    status = models.CharField(max_length=9, choices=ContractStatus.choices)
 
     class Meta:
         managed = False
@@ -158,12 +160,18 @@ class Ticket(models.Model):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    STATUS = [
+        ('BRONZE', 'Bronze'),
+        ('SILVER', 'Silver'),
+        ('GOLD', 'Gold'),
+    ]
     password = models.CharField(max_length=128, null=True)
     username = models.CharField(db_index=True, max_length=255, unique=True)
     email = models.EmailField(db_index=True, unique=True)
     first_name = models.CharField(max_length=128)
     last_name = models.CharField(max_length=128)
     personal_sale = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=6, choices=STATUS, blank=True)
     is_staff = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(default=timezone.now)

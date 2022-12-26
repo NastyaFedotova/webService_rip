@@ -21,8 +21,9 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer  # преобразование таблиц из БД в json
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'partial_update', 'create', 'destroy']:
-            permission_classes = [IsAuthenticatedOrReadOnly]
+        if self.action in ['list', 'retrieve', 'partial_update', 'create' ,'post', 'destroy']:
+            #permission_classes = [IsAuthenticatedOrReadOnly]
+            permission_classes = [AllowAny]
         elif self.action in ['update']:
             permission_classes = [IsStaff]
         else:
@@ -36,7 +37,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         if ticket_status:
             queryset = queryset.filter(status=ticket_status)
         if user_id:
-            queryset = queryset.filter(id=user_id)
+            queryset = queryset.filter(user=user_id)
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -66,21 +67,35 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def partial_update(self, request, pk=None, **kwargs):
+        try:
+            ticket = Ticket.objects.get(pk=pk)
+        except Ticket.DoesNotExist:
+            return Response({'message': 'The tickets does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = TicketSerializer(ticket, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, pk=None, **kwargs):
         try:
-            self.get_queryset().delete()
+            ticket = Ticket.objects.get(pk=pk)
+            serializer = TicketSerializer(ticket)
+            ticket.delete()
         except Exception:
             return Response(self.serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'price_range', 'retrieve', 'partial_update']:
-            permission_classes = [IsAuthenticatedOrReadOnly]
-        elif self.action in ['create', 'update']:
+        if self.action in ['list', 'retrieve', 'partial_update', 'price_range']:
+            # permission_classes = [IsAuthenticatedOrReadOnly]
+            permission_classes = [AllowAny]
+        elif self.action in ['create', 'update', 'destroy']:
             permission_classes = [IsStaff]
         else:
             permission_classes = [IsSuperUser]
@@ -153,12 +168,25 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def partial_update(self, request, pk=None, **kwargs):
+        try:
+            event = Event.objects.get(pk=pk)
+        except Event.DoesNotExist:
+            return Response({'message': 'The events does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = EventSerializer(event, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, pk=None, **kwargs):
         try:
-            self.get_queryset().delete()
+            event = Event.objects.get(pk=pk)
+            serializer = EventSerializer(event)
+            Event.objects.get(pk=pk).delete()
         except Exception:
             return Response(self.serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LoginAPIView(APIView):
@@ -167,13 +195,14 @@ class LoginAPIView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        response = Response(serializer.data, status=status.HTTP_200_OK)
-        user = User.objects.get(username=serializer.data.get('username'))
-        random_key = str(uuid.uuid4())
-        response.set_cookie(key='session_id', value=random_key, samesite='None', secure=True)
-        session_storage.set(random_key, value=user.pk)
-        return response
+        if serializer.is_valid(raise_exception=True):
+            response = Response(serializer.data, status=status.HTTP_200_OK)
+            user = User.objects.get(username=serializer.data.get('username'))
+            random_key = str(uuid.uuid4())
+            response.set_cookie(key='session_id', value=random_key, samesite='None', secure=True)
+            session_storage.set(random_key, value=user.pk)
+            return response
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegistrationAPIView(APIView):
